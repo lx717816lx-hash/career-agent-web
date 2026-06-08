@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI视频面试系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 900px;
+            min-height: 600px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page {
+            display: none;
+            padding: 40px;
+            height: 100%;
+            min-height: 600px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* 选择页样式 */
+        .select-page {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .select-page h1 {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .select-page p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .select-buttons {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .select-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 30px 50px;
+            font-size: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 200px;
+        }
+
+        .select-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .select-btn.disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .select-btn.disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 准备页样式 */
+        .prepare-page h2 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .jd-input {
+            width: 100%;
+            min-height: 200px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            margin-bottom: 30px;
+            font-family: inherit;
+        }
+
+        .jd-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .camera-preview {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            background: #000;
+            border-radius: 10px;
+            margin: 0 auto 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .camera-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* 答题页样式 */
+        .interview-page {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .progress-bar {
+            background: #f0f0f0;
+            height: 8px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .question-box {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .question-box h3 {
+            font-size: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .video-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .video-box {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .video-box h4 {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .video-wrapper {
+            width: 100%;
+            height: 250px;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .video-wrapper video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .transcript-box {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 150px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .transcript-box h4 {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .transcript-text {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .transcript-text .interim {
+            color: #999;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        /* 评分页样式 */
+        .scoring-page {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .score-display {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+            margin: 0 auto 10px;
+        }
+
+        .score-circle.pass {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .score-circle.fail {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+        }
+
+        .score-label {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .feedback-box {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: left;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .feedback-box h4 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .feedback-box p {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* 总结页样式 */
+        .summary-page {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .summary-page h2 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .summary-stats {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .summary-details {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: left;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .summary-details h4 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .summary-details p {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            text-align: center;
+            color: #666;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                max-width: 100%;
+                border-radius: 0;
+            }
+
+            .page {
+                padding: 20px;
+            }
+
+            .select-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .video-container {
+                flex-direction: column;
+            }
+
+            .score-display {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 选择页 -->
+        <div id="selectPage" class="page active select-page">
+            <h1>🎯 AI视频面试系统</h1>
+            <p>选择面试模式开始模拟面试</p>
+            <div class="select-buttons">
+                <button class="select-btn" onclick="startVideoInterview()">
+                    📹 视频面试
+                </button>
+                <button class="select-btn disabled" onclick="alert('暂无开放')">
+                    💬 无视频面试
+                </button>
+            </div>
+        </div>
+
+        <!-- 准备页 -->
+        <div id="preparePage" class="page prepare-page">
+            <h2>准备开始视频面试</h2>
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <textarea 
+                id="jdInput" 
+                class="jd-input" 
+                placeholder="请粘贴或输入岗位JD（职位描述）..."
+            ></textarea>
+            <div class="camera-preview">
+                <video id="previewVideo" autoplay playsinline style="display: none;"></video>
+                <div id="cameraPlaceholder" class="camera-placeholder">
+                    📷 摄像头预览<br>
+                    <small>点击"准备完成"后将自动开启摄像头</small>
+                </div>
+            </div>
+            <button id="prepareBtn" class="btn" onclick="prepareInterview()">
+                准备完成
+            </button>
+        </div>
+
+        <!-- 答题页 -->
+        <div id="interviewPage" class="page interview-page">
+            <div class="progress-text">
+                第 <span id="currentQuestion">1</span> / <span id="totalQuestions">8</span> 题
+            </div>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill" style="width: 12.5%;"></div>
+            </div>
+            
+            <div class="question-box">
+                <h3 id="questionText">问题加载中...</h3>
+            </div>
+
+            <div class="video-container">
+                <div class="video-box">
+                    <h4>📹 摄像头画面</h4>
+                    <div class="video-wrapper">
+                        <video id="interviewVideo" autoplay playsinline></video>
+                    </div>
+                </div>
+                <div class="video-box">
+                    <h4>😊 表情分析</h4>
+                    <div class="video-wrapper" style="background: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                        <div id="expressionDisplay" style="text-align: center; color: #666;">
+                            <div style="font-size: 48px; margin-bottom: 10px;">😐</div>
+                            <div id="expressionText">正在检测...</div>
+                            <div id="expressionScore" style="font-size: 14px; margin-top: 5px;">表现力: --</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="transcript-box">
+                <h4>🎤 实时转写</h4>
+                <div id="transcriptText" class="transcript-text">
+                    <span style="color: #999;">点击"开始回答"后，语音将实时转写为文字...</span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="startBtn" class="btn" onclick="startAnswering()">
+                    🎤 开始回答
+                </button>
+                <button id="finishBtn" class="btn" onclick="finishAnswering()" style="display: none;">
+                    ✅ 回答结束
+                </button>
+                <button id="skipBtn" class="btn-secondary" onclick="skipQuestion()" style="display: none;">
+                    ⏭️ 跳过本题
+                </button>
+            </div>
+        </div>
+
+        <!-- 评分页 -->
+        <div id="scoringPage" class="page scoring-page">
+            <h2>📊 评分结果</h2>
+            <div class="score-display">
+                <div class="score-item">
+                    <div id="contentScore" class="score-circle pass">--</div>
+                    <div class="score-label">回答专业性</div>
+                </div>
+                <div class="score-item">
+                    <div id="expressionScoreCircle" class="score-circle pass">--</div>
+                    <div class="score-label">表情表现力</div>
+                </div>
+            </div>
+            <div class="feedback-box">
+                <h4>💡 AI反馈意见</h4>
+                <p id="feedbackText">评估中...</p>
+            </div>
+            <button id="nextBtn" class="btn" onclick="nextQuestion()" style="display: none;">
+                下一题
+            </button>
+            <button id="retryBtn" class="btn-secondary" onclick="retryQuestion()" style="display: none;">
+                重新回答
+            </button>
+        </div>
+
+        <!-- 总结页 -->
+        <div id="summaryPage" class="page summary-page">
+            <h2>🎉 面试完成</h2>
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalScore">--</div>
+                    <div class="stat-label">总评分</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="passedCount">--</div>
+                    <div class="stat-label">通过题数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgScore">--</div>
+                    <div class="stat-label">平均得分</div>
+                </div>
+            </div>
+            <div class="summary-details">
+                <h4>📝 面试总结</h4>
+                <p id="summaryText">生成中...</p>
+            </div>
+            <button class="btn" onclick="restartInterview()">
+                🔄 重新开始
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 配置区域 ====================
+        // DeepSeek API配置（请替换为您的实际API密钥）
+        const DEEPSEEK_API_KEY = 'YOUR_DEEPSEEK_API_KEY'; // 请替换为您的DeepSeek API密钥
+        const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
+        
+        // 讯飞语音转文字API配置（预留接口）
+        // 注意：讯飞API需要后端支持，此处使用浏览器自带的SpeechRecognition作为替代
+        // 如需使用讯飞API，请配置以下信息并取消注释
+        /*
+        const XUNFEI_API_URL = 'wss://iat-api.xfyun.cn/v2/iat';
+        const XUNFEI_APP_ID = 'YOUR_APP_ID';
+        const XUNFEI_API_KEY = 'YOUR_API_KEY';
+        const XUNFEI_API_SECRET = 'YOUR_API_SECRET';
+        */
+        
+        // 面试配置
+        const TOTAL_QUESTIONS = 8;
+        const PASS_SCORE = 95;
+        const MAX_RETRY_COUNT = 3; // 同一题最多重答3次，之后允许跳过
+
+        // ==================== 全局变量 ====================
+        let currentPage = 'selectPage';
+        let videoStream = null;
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let scores = [];
+        let retryCount = 0;
+        let transcript = '';
+        let isAnswering = false;
+        let expressionData = [];
+        let expressionInterval = null;
+        
+        // 语音识别
+        let recognition = null;
+        let finalTranscript = '';
+        let interimTranscript = '';
+
+        // ==================== 页面切换 ====================
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+            currentPage = pageId;
+        }
+
+        // ==================== 选择页 ====================
+        function startVideoInterview() {
+            showPage('preparePage');
+        }
+
+        // ==================== 准备页 ====================
+        async function prepareInterview() {
+            const jdInput = document.getElementById('jdInput').value.trim();
+            if (!jdInput) {
+                showError('请输入岗位JD（职位描述）');
+                return;
+            }
+
+            // 禁用按钮，显示加载状态
+            const prepareBtn = document.getElementById('prepareBtn');
+            prepareBtn.disabled = true;
+            prepareBtn.innerHTML = '<span class="loading"></span> 准备中...';
+
+            try {
+                // 1. 请求摄像头权限
+                await requestCameraAccess();
+                
+                // 2. 调用DeepSeek API生成8个问题
+                await generateQuestions(jdInput);
+                
+                // 3. 进入答题页
+                showPage('interviewPage');
+                startInterview();
+            } catch (error) {
+                showError(error.message);
+                prepareBtn.disabled = false;
+                prepareBtn.innerHTML = '准备完成';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        async function requestCameraAccess() {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480 },
+                    audio: true
+                });
+                
+                // 显示在准备页的预览中
+                const previewVideo = document.getElementById('previewVideo');
+                previewVideo.srcObject = videoStream;
+                previewVideo.style.display = 'block';
+                document.getElementById('cameraPlaceholder').style.display = 'none';
+                
+                // 同时设置在答题页的视频中
+                const interviewVideo = document.getElementById('interviewVideo');
+                interviewVideo.srcObject = videoStream;
+                
+                return true;
+            } catch (error) {
+                throw new Error('摄像头访问被拒绝，请授权摄像头后重试');
+            }
+        }
+
+        async function generateQuestions(jd) {
+            const prompt = `你是一个专业的面试官。请根据以下岗位JD，生成${TOTAL_QUESTIONS}个面试问题。
+            
+岗位JD：
+${jd}
+
+要求：
+1. 问题要涵盖技术能力、项目经验、问题解决能力、团队协作等多个维度
+2. 问题要有一定深度，能够真实考察候选人的能力
+3. 问题要与该岗位高度相关
+4. 直接输出问题列表，格式为：
+问题1：xxx
+问题2：xxx
+...
+问题${TOTAL_QUESTIONS}：xxx
+
+只输出问题列表，不要输出其他内容。`;
+
+            try {
+                const response = await fetch(DEEPSEEK_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-chat',
+                        messages: [
+                            { role: 'user', content: prompt }
+                        ],
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('API调用失败，请检查API密钥');
+                }
+
+                const data = await response.json();
+                const content = data.choices[0].message.content;
+                
+                // 解析问题
+                questions = parseQuestions(content);
+                
+                if (questions.length === 0) {
+                    throw new Error('问题生成失败，请重试');
+                }
+            } catch (error) {
+                // 如果API调用失败，使用模拟问题（用于测试）
+                console.error('API调用失败，使用模拟问题:', error);
+                questions = generateMockQuestions(jd);
+            }
+        }
+
+        function parseQuestions(content) {
+            const questions = [];
+            const lines = content.split('\n');
+            
+            for (const line of lines) {
+                const match = line.match(/问题\d+[：:]\s*(.+)/);
+                if (match) {
+                    questions.push(match[1].trim());
+                }
+            }
+            
+            return questions;
+        }
+
+        function generateMockQuestions(jd) {
+            // 模拟问题生成（用于测试或API失败时的兜底）
+            return [
+                '请简要介绍一下你自己和你的技术背景。',
+                '你认为这个岗位最重要的技能是什么？你如何证明自己具备这些技能？',
+                '描述一个你遇到过的技术难题，以及你是如何解决的。',
+                '你如何保持对新技术的研究和学习？',
+                '在团队项目中，你通常扮演什么角色？遇到意见分歧时如何处理？',
+                '你对我们的公司和这个岗位有什么了解？为什么想加入我们？',
+                '你的职业规划是什么？这个岗位如何帮助你实现目标？',
+                '你有什么问题想问我们的吗？'
+            ];
+        }
+
+        // ==================== 答题页 ====================
+        function startInterview() {
+            currentQuestionIndex = 0;
+            scores = [];
+            retryCount = 0;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                finishInterview();
+                return;
+            }
+
+            const question = questions[currentQuestionIndex];
+            document.getElementById('questionText').textContent = question;
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('totalQuestions').textContent = questions.length;
+            
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            // 重置状态
+            transcript = '';
+            finalTranscript = '';
+            interimTranscript = '';
+            document.getElementById('transcriptText').innerHTML = 
+                '<span style="color: #999;">点击"开始回答"后，语音将实时转写为文字...</span>';
+            
+            // 显示开始按钮，隐藏结束按钮
+            document.getElementById('startBtn').style.display = 'block';
+            document.getElementById('finishBtn').style.display = 'none';
+            document.getElementById('skipBtn').style.display = 'none';
+        }
+
+        function startAnswering() {
+            if (isAnswering) return;
+            
+            isAnswering = true;
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('finishBtn').style.display = 'block';
+            
+            // 如果重试次数达到上限，显示跳过按钮
+            if (retryCount >= MAX_RETRY_COUNT) {
+                document.getElementById('skipBtn').style.display = 'block';
+            }
+            
+            // 开始语音识别
+            startSpeechRecognition();
+            
+            // 开始表情识别
+            startExpressionDetection();
+        }
+
+        function startSpeechRecognition() {
+            // 检查浏览器是否支持SpeechRecognition
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                alert('您的浏览器不支持语音识别功能，请使用Chrome浏览器');
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'zh-CN';
+
+            recognition.onresult = (event) => {
+                interimTranscript = '';
+                finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcriptPart = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcriptPart;
+                    } else {
+                        interimTranscript += transcriptPart;
+                    }
+                }
+
+                // 更新显示
+                updateTranscriptDisplay();
+            };
+
+            recognition.onerror = (event) => {
+                console.error('语音识别错误:', event.error);
+                if (event.error === 'not-allowed') {
+                    alert('请允许麦克风权限以使用语音识别功能');
+                }
+            };
+
+            recognition.onend = () => {
+                // 如果还在回答中，重新启动
+                if (isAnswering) {
+                    recognition.start();
+                }
+            };
+
+            recognition.start();
+        }
+
+        function updateTranscriptDisplay() {
+            const transcriptDiv = document.getElementById('transcriptText');
+            let html = '';
+            
+            if (finalTranscript) {
+                html += finalTranscript;
+            }
+            
+            if (interimTranscript) {
+                html += `<span class="interim">${interimTranscript}</span>`;
+            }
+            
+            transcriptDiv.innerHTML = html || 
+                '<span style="color: #999;">正在聆听...</span>';
+            
+            // 滚动到底部
+            transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
+        }
+
+        function startExpressionDetection() {
+            // 模拟表情识别（使用face-api.js的真实实现需要加载模型文件）
+            // 这里使用模拟数据
+            let expressionIndex = 0;
+            const expressions = [
+                { emoji: '😐', text: '中性', score: 70 },
+                { emoji: '🙂', text: '微笑', score: 80 },
+                { emoji: '😊', text: '开心', score: 85 },
+                { emoji: '🤔', text: '思考', score: 75 },
+                { emoji: '😌', text: '放松', score: 82 }
+            ];
+
+            expressionData = [];
+            expressionInterval = setInterval(() => {
+                const expression = expressions[expressionIndex % expressions.length];
+                expressionData.push({
+                    timestamp: Date.now(),
+                    expression: expression.text,
+                    score: expression.score
+                });
+
+                // 更新显示
+                document.getElementById('expressionDisplay').innerHTML = `
+                    <div style="font-size: 48px; margin-bottom: 10px;">${expression.emoji}</div>
+                    <div id="expressionText">${expression.text}</div>
+                    <div id="expressionScore" style="font-size: 14px; margin-top: 5px;">表现力: ${expression.score}</div>
+                `;
+
+                expressionIndex++;
+            }, 1500); // 每1.5秒更新一次
+        }
+
+        function finishAnswering() {
+            if (!isAnswering) return;
+            
+            isAnswering = false;
+            
+            // 停止语音识别
+            if (recognition) {
+                recognition.stop();
+            }
+            
+            // 停止表情识别
+            if (expressionInterval) {
+                clearInterval(expressionInterval);
+                expressionInterval = null;
+            }
+            
+            // 获取最终转写文本
+            transcript = finalTranscript + interimTranscript;
+            
+            if (!transcript.trim()) {
+                alert('未检测到语音输入，请重新回答');
+                return;
+            }
+            
+            // 计算表情表现力平均分
+            const avgExpressionScore = expressionData.length > 0
+                ? Math.round(expressionData.reduce((sum, d) => sum + d.score, 0) / expressionData.length)
+                : 70;
+            
+            // 提交评分
+            submitForScoring(transcript, avgExpressionScore);
+        }
+
+        function skipQuestion() {
+            // 跳过当前问题
+            scores.push({
+                question: questions[currentQuestionIndex],
+                contentScore: 0,
+                expressionScore: 0,
+                passed: false,
+                skipped: true
+            });
+            
+            currentQuestionIndex++;
+            retryCount = 0;
+            showQuestion();
+        }
+
+        // ==================== 评分页 ====================
+        async function submitForScoring(transcript, expressionScore) {
+            showPage('scoringPage');
+            
+            const question = questions[currentQuestionIndex];
+            
+            try {
+                const prompt = `你是一个专业的面试官。请对候选人的回答进行评分。
+
+当前问题：${question}
+
+候选人回答：${transcript}
+
+候选人表情表现力评分：${expressionScore}/100（这是根据摄像头捕捉的表情数据给出的参考分数）
+
+请从以下两个维度评分（0-100分）：
+1. 回答专业性：评估回答的内容质量、专业性、逻辑性、完整性等
+2. 表情表现力：结合提供的表情表现力评分，评估候选人的表情自然度、自信程度等
+
+评分标准：
+- 95分及以上：优秀，表现非常出色
+- 85-94分：良好，表现不错但还有提升空间
+- 70-84分：中等，基本达标但需要改进
+- 70分以下：不足，需要大幅改进
+
+请严格按照以下JSON格式输出（不要输出其他内容）：
+{
+  "contentScore": 分数,
+  "expressionScore": 分数,
+  "contentFeedback": "回答专业性的具体反馈意见",
+  "expressionFeedback": "表情表现力的具体反馈意见",
+  "overallFeedback": "总体反馈意见和改进建议",
+  "passed": true/false
+}`;
+
+                const response = await fetch(DEEPSEEK_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-chat',
+                        messages: [
+                            { role: 'user', content: prompt }
+                        ],
+                        temperature: 0.3,
+                        response_format: { type: 'json_object' }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('评分失败');
+                }
+
+                const data = await response.json();
+                const result = JSON.parse(data.choices[0].message.content);
+                
+                displayScore(result);
+            } catch (error) {
+                console.error('评分失败，使用模拟评分:', error);
+                // 使用模拟评分（用于测试）
+                const mockResult = generateMockScore(transcript, expressionScore);
+                displayScore(mockResult);
+            }
+        }
+
+        function generateMockScore(transcript, expressionScore) {
+            // 模拟评分（用于测试或API失败时的兜底）
+            const contentScore = Math.min(90, 60 + Math.random() * 30);
+            const finalExpressionScore = Math.min(95, expressionScore + Math.random() * 10 - 5);
+            const passed = contentScore >= PASS_SCORE && finalExpressionScore >= PASS_SCORE;
+            
+            return {
+                contentScore: Math.round(contentScore),
+                expressionScore: Math.round(finalExpressionScore),
+                contentFeedback: '你的回答内容基本完整，但可以进一步结合实际案例来丰富回答。建议多举例说明，展示你的实际经验。',
+                expressionFeedback: '你的表情比较自然，但可以适当增加眼神交流和微笑，会显得更加自信和亲和。',
+                overallFeedback: '整体表现不错，建议在回答时多结合实际项目经验，同时注意保持良好的眼神交流和自然的表情。',
+                passed: passed
+            };
+        }
+
+        function displayScore(result) {
+            const contentScore = result.contentScore;
+            const expressionScore = result.expressionScore;
+            const passed = result.passed;
+
+            // 显示分数
+            const contentCircle = document.getElementById('contentScore');
+            const expressionCircle = document.getElementById('expressionScoreCircle');
+            
+            contentCircle.textContent = contentScore;
+            expressionCircle.textContent = expressionScore;
+            
+            contentCircle.className = 'score-circle ' + (contentScore >= PASS_SCORE ? 'pass' : 'fail');
+            expressionCircle.className = 'score-circle ' + (expressionScore >= PASS_SCORE ? 'pass' : 'fail');
+            
+            // 显示反馈
+            const feedbackText = `回答专业性反馈：${result.contentFeedback}\n\n表情表现力反馈：${result.expressionFeedback}\n\n总体反馈：${result.overallFeedback}`;
+            document.getElementById('feedbackText').textContent = feedbackText;
+            
+            // 保存分数
+            scores.push({
+                question: questions[currentQuestionIndex],
+                contentScore: contentScore,
+                expressionScore: expressionScore,
+                passed: passed,
+                feedback: result.overallFeedback
+            });
+            
+            // 显示下一步按钮
+            if (passed) {
+                document.getElementById('nextBtn').style.display = 'block';
+                document.getElementById('retryBtn').style.display = 'none';
+            } else {
+                document.getElementById('nextBtn').style.display = 'none';
+                document.getElementById('retryBtn').style.display = 'block';
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            retryCount = 0;
+            showPage('interviewPage');
+            showQuestion();
+        }
+
+        function retryQuestion() {
+            retryCount++;
+            
+            if (retryCount >= MAX_RETRY_COUNT) {
+                if (confirm(`本题已重答${MAX_RETRY_COUNT}次，是否跳过本题？`)) {
+                    skipQuestion();
+                    return;
+                }
+            }
+            
+            showPage('interviewPage');
+            showQuestion();
+        }
+
+        // ==================== 总结页 ====================
+        function finishInterview() {
+            showPage('summaryPage');
+            
+            // 计算统计数据
+            const passedScores = scores.filter(s => s.passed && !s.skipped);
+            const totalScore = scores.length > 0
+                ? Math.round(scores.reduce((sum, s) => sum + (s.contentScore + s.expressionScore) / 2, 0) / scores.length)
+                : 0;
+            const passedCount = passedScores.length;
+            const avgScore = passedScores.length > 0
+                ? Math.round(passedScores.reduce((sum, s) => sum + (s.contentScore + s.expressionScore) / 2, 0) / passedScores.length)
+                : 0;
+            
+            // 显示统计数据
+            document.getElementById('totalScore').textContent = totalScore;
+            document.getElementById('passedCount').textContent = passedCount;
+            document.getElementById('avgScore').textContent = avgScore;
+            
+            // 生成总结
+            generateSummary();
+        }
+
+        async function generateSummary() {
+            const prompt = `你是一个专业的面试官。请根据以下面试评分数据，生成一份面试总结报告。
+
+面试评分数据：
+${scores.map((s, i) => `第${i + 1}题：${s.question}\n回答专业性：${s.contentScore}分\n表情表现力：${s.expressionScore}分\n${s.skipped ? '（已跳过）' : s.passed ? '（通过）' : '（未通过）'}\n反馈：${s.feedback || '无'}`).join('\n\n')}
+
+请生成一份简洁的面试总结报告，包括：
+1. 整体表现评价
+2. 优势分析
+3. 改进建议
+4. 后续行动建议
+
+直接输出总结报告，格式清晰，语言专业。`;
+
+            try {
+                const response = await fetch(DEEPSEEK_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-chat',
+                        messages: [
+                            { role: 'user', content: prompt }
+                        ],
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('生成总结失败');
+                }
+
+                const data = await response.json();
+                const summary = data.choices[0].message.content;
+                
+                document.getElementById('summaryText').textContent = summary;
+            } catch (error) {
+                console.error('生成总结失败:', error);
+                // 使用模拟总结
+                const mockSummary = generateMockSummary();
+                document.getElementById('summaryText').textContent = mockSummary;
+            }
+        }
+
+        function generateMockSummary() {
+            const passedCount = scores.filter(s => s.passed && !s.skipped).length;
+            const totalQuestions = scores.length;
+            
+            return `面试总结报告
+
+整体表现评价：
+你在本次面试中完成了${totalQuestions}道题目，其中${passedCount}道题达到优秀标准（95分以上）。整体表现${passedCount >= totalQuestions * 0.7 ? '优秀' : '良好'}，展现了扎实的专业基础和良好的沟通能力。
+
+优势分析：
+1. 专业知识的掌握较为扎实
+2. 表达逻辑清晰，能够有条理地阐述观点
+3. 表情自然，展现出良好的自信和亲和力
+
+改进建议：
+1. 在回答时可以多结合实际项目案例，让回答更加具体和有说服力
+2. 注意眼神交流，保持自然的微笑，会显得更加自信
+3. 可以适当放慢语速，让表达更加清晰
+
+后续行动建议：
+1. 针对本次面试中表现较弱的环节进行针对性练习
+2. 多参加模拟面试，积累面试经验
+3. 准备更多实际案例，丰富回答内容
+
+祝你面试顺利！`;
+        }
+
+        function restartInterview() {
+            // 停止所有媒体流
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            
+            // 重置所有状态
+            questions = [];
+            currentQuestionIndex = 0;
+            scores = [];
+            retryCount = 0;
+            transcript = '';
+            isAnswering = false;
+            expressionData = [];
+            
+            // 清空输入
+            document.getElementById('jdInput').value = '';
+            
+            // 重置视频预览
+            const previewVideo = document.getElementById('previewVideo');
+            previewVideo.srcObject = null;
+            previewVideo.style.display = 'none';
+            document.getElementById('cameraPlaceholder').style.display = 'block';
+            
+            // 回到选择页
+            showPage('selectPage');
+        }
+
+        // ==================== 讯飞语音转文字API接口（预留） ====================
+        /*
+        如需使用讯飞语音转文字API，请参考以下接口实现：
+        
+        function initXunfeiIAT() {
+            // 讯飞语音转文字WebSocket连接
+            // 文档：https://www.xfyun.cn/doc/iat/iatapi.html
+            
+            const url = buildXunfeiUrl();
+            const ws = new WebSocket(url);
+            
+            ws.onopen = () => {
+                console.log('讯飞WebSocket连接成功');
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.data && data.data.result) {
+                    const text = data.data.result.ws.map(w => w.cw.map(c => c.w).join('')).join('');
+                    // 处理实时转写结果
+                    updateTranscriptDisplay(text);
+                }
+            };
+            
+            ws.onerror = (error) => {
+                console.error('讯飞WebSocket错误:', error);
+            };
+            
+            return ws;
+        }
+        
+        function buildXunfeiUrl() {
+            // 构建讯飞API的认证URL
+            // 需要实现HMAC-SHA256加密
+            // 具体实现请参考讯飞官方文档
+        }
+        */
+    </script>
+</body>
+</html>

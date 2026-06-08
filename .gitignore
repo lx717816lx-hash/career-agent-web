@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.npm-cache/
+.env
+*.log
+.DS_Store
+Thumbs.db
+*.docx
+scratch/
+deploy3/

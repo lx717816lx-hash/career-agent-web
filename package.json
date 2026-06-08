@@ -1,0 +1,31 @@
+{
+  "name": "career-agent-web",
+  "version": "1.0.0",
+  "description": "大学生求职智能体网页系统 - AI驱动的求职助手",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "docx": "^9.7.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jszip": "^3.10.1",
+    "mammoth": "^1.8.0",
+    "multer": "^1.4.5-lts.1",
+    "openai": "^4.82.0",
+    "pdf-parse": "^1.1.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "adm-zip": "^0.5.17",
+    "vite": "^6.0.7"
+  }
+}
